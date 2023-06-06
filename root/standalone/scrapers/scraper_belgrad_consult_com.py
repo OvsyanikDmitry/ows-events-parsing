@@ -23,7 +23,7 @@ async def get_page() -> str:
         "div[class='js-feed-btn-show-more "
         "t-feed__showmore-btn t-btn t-btn_md']",
     )
-
+    options.binary_location = r"C:\Program Files\Google\Chrome Beta\Application\chrome.exe"
     try:
         cnt = 0
         while cnt < 100:
@@ -112,3 +112,7 @@ async def get_data() -> list[dict]:
     html = await get_page()
     blocks = scrape_blocks(html)
     return [parse_block(block) for block in blocks]
+
+
+test = asyncio.run(get_data())
+print(test)
