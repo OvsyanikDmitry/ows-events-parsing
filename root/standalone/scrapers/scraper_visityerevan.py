@@ -115,55 +115,59 @@ def get_prices(cards):
     return price
 
 
+def parse_block(block) -> Event:
+    """ Parse one block from scraped data """
+    # Extract and prepare "time"
+    month_day_node = block.css_first(
+        "div[class='col-12 mt-n1'] > div")
+    # Need validate data each parsing attempt
+    if is_valid(month_day_node):
+        month_day = month_day_node.text().replace('\n', '').strip()
+
+    time_node = block.css_first(
+        "div[class='text-grey text-md mb-2']")
+
+    if is_valid(time_node):
+        time = time_node.text().replace('\n', '').strip().split(' ')
+        cleaned_time = f"{month_day} {time[-1:][0]}"
+    else:
+        cleaned_time = None
+    # Extract and prepare "description"
+    description_node = block.css_first("p")
+    if is_valid(description_node):
+        description = description_node.text().strip()
+    # Clean and prepare "url"
+    url_href = block.css_first("a").attrs["href"]
+    if is_valid(url_href):
+        url = "https://www.visityerevan.am" + url_href
+    # Extract price
+    cards = block.css("p.card-text > span")
+    price = get_prices(cards)
+    # Extract img link
+    img_src = block.css_first("img").attrs["src"]
+
+    if is_valid(img_src):
+        img = "https://www.visityerevan.am" + img_src
+    # There is not need in cleaning "title"
+    # With data we have create a new event object
+    event = Event(
+        title=block.css_first("h5").text(),
+        description=description,
+        url_to_original=url,
+        time=cleaned_time,
+        price=price,
+        img=img
+    )
+    return event
+
+
 def parse_detail(blocks: list) -> list:
     """ Clean and prepare all data that we need """
     result = []
-
     # In this loop we will extract all
     #  info that we can from each event's div
     for block in blocks:
-        # Extract and prepare "time"
-        month_day_node = block.css_first(
-            "div[class='col-12 mt-n1'] > div")
-        # Need validate data each parsing attempt
-        if is_valid(month_day_node):
-            month_day = month_day_node.text().replace('\n', '').strip()
-
-        time_node = block.css_first(
-            "div[class='text-grey text-md mb-2']")
-
-        if is_valid(time_node):
-            time = time_node.text().replace('\n', '').strip().split(' ')
-            cleaned_time = f"{month_day} {time[-1:][0]}"
-        else:
-            cleaned_time = None
-        # Extract and prepare "description"
-        description_node = block.css_first("p")
-        if is_valid(description_node):
-            description = description_node.text().strip()
-        # Clean and prepare "url"
-        url_href = block.css_first("a").attrs["href"]
-        if is_valid(url_href):
-            url = "https://www.visityerevan.am" + url_href
-        # Extract price
-        cards = block.css("p.card-text > span")
-        price = get_prices(cards)
-        # Extract img link
-        img_src = block.css_first("img").attrs["src"]
-
-        if is_valid(img_src):
-            img = "https://www.visityerevan.am" + img_src
-        # There is not need in cleaning "title"
-        # With data we have create a new event object
-        event = Event(
-            title=block.css_first("h5").text(),
-            description=description,
-            url_to_original=url,
-            time=cleaned_time,
-            price=price,
-            img=img
-        )
-
+        event = parse_block(block)
         result.append(serialize_event(event))
 
     return result
