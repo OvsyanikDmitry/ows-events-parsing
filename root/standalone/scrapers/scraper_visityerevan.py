@@ -54,7 +54,7 @@ def serialize_event(event):
         "durationInSeconds": 0,
         "location": {
                 "country": "Armenia",
-                "city": "Erevan",
+                "city": "Yerevan",
         },
         "image": event.img,
         "price": {
@@ -99,6 +99,22 @@ def is_valid(data) -> bool:
         return True
 
 
+def get_prices(cards):
+    """ extract prices """
+    if len(cards) == 0:
+        logger.warning(
+            "Seems that website changed structure. Please recheck code and website")
+        return "website structure changed"
+    else:
+        for card in cards:
+            card = card.text()
+            if "AMD" in card:
+                price = card.replace("AMD", "").strip()
+            else:
+                price = "no info"
+    return price
+
+
 def parse_detail(blocks: list) -> list:
     """ Clean and prepare all data that we need """
     result = []
@@ -130,19 +146,9 @@ def parse_detail(blocks: list) -> list:
         if is_valid(url):
             url = "https://www.visityerevan.am" + url
         # Extract price
-        price = ''
         cards = block.css("p.card-text > span")
-
-        if len(cards) == 0:
-            logger.warning(
-                "Seems that website changed structure. Please recheck code and website")
-        else:
-            for card in cards:
-                card = card.text()
-                if "AMD" in card:
-                    price = card.replace("AMD", "").strip()
-                else:
-                    price = "no info"
+        price = get_prices(cards)
+        
         # Extract img link
         img = block.css_first("img").attrs["src"]
 
