@@ -1,7 +1,7 @@
 """ API """
 from fastapi import FastAPI
 
-from routers import router
+from root.routers import router
 
 app = FastAPI()
 
