@@ -1,4 +1,3 @@
-# pylint: disable=W0611, E0401
 """
 Main goal of this module is to scrape and parse data from "visityerevan.am" website
 """

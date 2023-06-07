@@ -14,7 +14,6 @@ from selenium.webdriver.common.by import By
 async def get_page() -> str:
     options = ChromeOptions()
     options.add_argument("--headless=new")
-    options.binary_location = r"C:\Program Files\Google\Chrome Beta\Application\chrome.exe"
     driver = webdriver.Chrome(options=options)
     driver.get("https://belgrad-consult.com/afisha-belgrada")
 
@@ -24,7 +23,7 @@ async def get_page() -> str:
         "div[class='js-feed-btn-show-more "
         "t-feed__showmore-btn t-btn t-btn_md']",
     )
-    options.binary_location = r"C:\Program Files\Google\Chrome Beta\Application\chrome.exe"
+    
     try:
         cnt = 0
         while cnt < 100:
