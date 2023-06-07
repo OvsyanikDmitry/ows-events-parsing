@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from root.standalone.scrapers.scraper_belgrad_consult_com import get_data
+from standalone.scrapers.scraper_belgrad_consult_com import get_data
 
 router = APIRouter(prefix="/standalone")
 

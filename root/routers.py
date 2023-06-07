@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
-from root.standalone import views
+from standalone import views
 
-router = APIRouter(prefix="/api")
+api_router = APIRouter(prefix="/api")
 
-router.include_router(views.router)
+api_router.include_router(views.router)
