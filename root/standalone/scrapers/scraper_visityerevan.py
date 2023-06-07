@@ -89,7 +89,7 @@ def get_pages_amount(client: Client, url: str) -> int:
     return int(pages_amount)
 
 
-def is_valid(data):
+def is_valid(data) -> bool:
     """ Helps us to catch website's structure changes """
     if data is None:
         logger.warning(
@@ -105,7 +105,7 @@ def parse_detail(blocks: list) -> list:
     result = []
 
     # In this loop we will extract all
-    #  Info that we can from each event's div
+    #  info that we can from each event's div
     for block in blocks:
         # Extract and prepare "time"
         month_day = block.css_first(
@@ -195,7 +195,7 @@ def pagination_loop(client: Client) -> list:
     return blocks
 
 
-async def scrape_website() -> list:
+async def scrape_visityerevan() -> list:
     """ Main function which contains all logic """
     # Start a new session
     client = Client()

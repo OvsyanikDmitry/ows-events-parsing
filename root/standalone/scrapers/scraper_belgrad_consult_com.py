@@ -14,6 +14,7 @@ from selenium.webdriver.common.by import By
 async def get_page() -> str:
     options = ChromeOptions()
     options.add_argument("--headless=new")
+    options.binary_location = r"C:\Program Files\Google\Chrome Beta\Application\chrome.exe"
     driver = webdriver.Chrome(options=options)
     driver.get("https://belgrad-consult.com/afisha-belgrada")
 
@@ -114,5 +115,3 @@ async def get_data() -> list[dict]:
     return [parse_block(block) for block in blocks]
 
 
-test = asyncio.run(get_data())
-print(test)
