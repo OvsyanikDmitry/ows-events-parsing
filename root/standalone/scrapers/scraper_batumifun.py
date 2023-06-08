@@ -83,33 +83,33 @@ def scrape_page(html):
     return page_events
 
 
-async def run_batch(pnum, events):
-    """Single page handler, gets html, parses it and saves to events"""
+async def handle_page(pnum):
+    """Single page handler, gets html and parses it"""
+    batch_events = []
     async with aiohttp.ClientSession() as session:
         async with session.get(BASE_URL + f'page/{pnum}') as resp:
             # print(resp.status)
             page_events = scrape_page(await resp.text())
-            events.extend(page_events)
+            batch_events += page_events
+    return batch_events
 
 
-async def run_batches(bsize, events):
+async def run_batches():
     """Run all batches until encountering empty pages"""
     done = False
     it = 0
+    events = []
     while not done:
-        batch_events = []
-
         # Determine range of pages
-        batch_start = it * bsize + 1
-        batch_end = (it + 1) * bsize
+        batch_start = it * BSIZE + 1
+        batch_end = (it + 1) * BSIZE
         pn_range = range(batch_start, batch_end + 1)
         # print(f"Scrape pages {batch_start}-{batch_end}")
 
-        # Run requests
-        tasks = [asyncio.create_task(
-            run_batch(pn, batch_events)
-        ) for pn in pn_range]
-        await asyncio.gather(*tasks)
+        # Process batch of pages
+        tasks = [asyncio.create_task(handle_page(pn)) for pn in pn_range]
+        batch_events = await asyncio.gather(*tasks)
+        batch_events = [ev for page in batch_events for ev in page]
 
         # Done if no events, empty page or run too many batches
         it += 1
@@ -118,16 +118,9 @@ async def run_batches(bsize, events):
 
         # Clear data and save to main list
         batch_events = [ev for ev in batch_events if ev != DONE_CD]
-        events.extend(batch_events)
-
-
-def scrape_batumifun():
-    """Main method"""
-    events = []
-    asyncio.run(run_batches(BSIZE, events))
+        events += batch_events
     return events
 
 
 if __name__ == "__main__":
-    events = scrape_batumifun()
-    print(len(events))
+    print(asyncio.run(run_batches()))
