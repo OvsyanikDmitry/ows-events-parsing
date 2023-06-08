@@ -7,6 +7,7 @@ stops when encounters empty pages
 import aiohttp
 import asyncio
 from selectolax.parser import HTMLParser
+from urllib.parse import urljoin
 import re
 
 
@@ -86,8 +87,8 @@ def scrape_page(html):
 async def handle_page(pnum):
     """Single page handler, gets html and parses it"""
     batch_events = []
-    async with aiohttp.ClientSession() as session:
-        async with session.get(BASE_URL + f'page/{pnum}') as resp:
+    async with aiohttp.ClientSession() as se:
+        async with se.get(urljoin(BASE_URL, f'page/{pnum}')) as resp:
             # print(resp.status)
             page_events = scrape_page(await resp.text())
             batch_events += page_events
