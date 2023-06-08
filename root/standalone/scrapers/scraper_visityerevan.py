@@ -62,8 +62,8 @@ def serialize_event(event):
             "currency": "AMD"
         },
         "timezone": {
-            "timezoneName": "AMT",
-            "timezoneOffset": "UTC +4",
+            "timezoneName": "Asia/Yerevan",
+            "timezoneOffset": "+04:00",
         },
         "url": event.url_to_original,
     }
