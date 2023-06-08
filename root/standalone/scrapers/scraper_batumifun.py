@@ -12,10 +12,10 @@ import re
 
 
 BASE_URL = 'https://batumi.fun/events/list/'
-BSIZE = 10
-MAXIT = 4
-DONE_CD = -2
+BATCH_SIZE = 10
+MAX_BATCH_NUM = 4
 
+# Selectolax selectors
 EVENT_SEL = "div.tribe-events-calendar-list__event-row"
 TITLE_SEL = "h3.tribe-events-calendar-list__event-title"
 DTTM_SEL = "time.tribe-events-calendar-list__event-datetime"
@@ -25,10 +25,11 @@ IMG_SEL = "div.tribe-events-calendar-list__event-featured-image-wrapper"
 
 
 def parse_datetime(dttm_node):
-    """Parses dateand time from given node"""
+    """Parses date and time from given node"""
     raw_date = dttm_node.attributes['datetime']
     match_date = re.match(r'[0-9]{4}-[0-9]{2}-[0-9]{2}', raw_date)
     iso_date = None if match_date is None else match_date.group()
+    
     raw_time = dttm_node.text(strip=True)
     search_time = re.search(r'[0-9]{2}:[0-9]{2}', raw_time)
     time = None if search_time is None else search_time.group()
@@ -75,12 +76,15 @@ def scrape_event(event_node):
 def scrape_page(html):
     """Page scraper"""
     page_events = []
+    
+    # Find all event nodes
     tree = HTMLParser(html)
     event_nodes = tree.css(EVENT_SEL)
-    if not event_nodes:
-        return [DONE_CD]
+
+    # Process each event
     for event_node in event_nodes:
         page_events.append(scrape_event(event_node))
+    
     return page_events
 
 
@@ -101,27 +105,27 @@ async def run_batches():
     it = 0
     events = []
     while not done:
-        # Determine range of pages
-        batch_start = it * BSIZE + 1
-        batch_end = (it + 1) * BSIZE
+        # Determine range of pages in batch
+        batch_start = it * BATCH_SIZE + 1
+        batch_end = (it + 1) * BATCH_SIZE
         pn_range = range(batch_start, batch_end + 1)
-        # print(f"Scrape pages {batch_start}-{batch_end}")
+        print(f"Scraping pages {batch_start}-{batch_end}")
+        it += 1
 
         # Process batch of pages
         tasks = [asyncio.create_task(handle_page(pn)) for pn in pn_range]
-        batch_events = await asyncio.gather(*tasks)
-        batch_events = [ev for page in batch_events for ev in page]
-
-        # Done if no events, empty page or run too many batches
-        it += 1
-        done = not batch_events or it >= MAXIT
-        done = done or any((ev == DONE_CD for ev in batch_events))
+        parsed_pages = await asyncio.gather(*tasks)
+        
+        # Done if no events, empty page or too many batches
+        done = it >= MAX_BATCH_NUM or \
+            any((not page for page in parsed_pages))
 
         # Clear data and save to main list
-        batch_events = [ev for ev in batch_events if ev != DONE_CD]
-        events += batch_events
+        page_events = [ev for page in parsed_pages for ev in page]
+        events += page_events
     return events
 
 
 if __name__ == "__main__":
-    print(asyncio.run(run_batches()))
+    events = asyncio.run(run_batches())
+    print(len(events))
