@@ -8,25 +8,29 @@ from dataclasses import dataclass
 from urllib.parse import urljoin
 
 from httpx import Client
-from selectolax.parser import HTMLParser, Node
+from selectolax.parser import HTMLParser
 
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.WARNING)
 stream_handler = logging.StreamHandler(sys.stdout)
 formatter = logging.Formatter(
-    "[%(asctime)s] %(levelname)s:%(name)s:%(lineno)d:%(message)s")
+    "[%(asctime)s] %(levelname)s:%(name)s:%(lineno)d:%(message)s"
+)
 stream_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
 
-HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
-           "AppleWebKit/537.36 (KHTML, like Gecko) " +
-           "Chrome/109.0.0.0 Safari/537.36"}
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+    + "AppleWebKit/537.36 (KHTML, like Gecko) "
+    + "Chrome/109.0.0.0 Safari/537.36"
+}
 
 
 @dataclass
 class Event:
-    """ Class contains all info about event """
+    """Class contains all info about event"""
+
     title: str
     description: str
     url_to_original: str
@@ -37,13 +41,14 @@ class Event:
 
 @dataclass
 class Response:
-    """ Class contains html of page and info about existing of the next page """
+    """Class contains html of page and info about existing of the next page"""
+
     body_html: HTMLParser
     status_code: int
 
 
 def serialize_event(event):
-    """ Resulting format for each event """
+    """Resulting format for each event"""
     return {
         "id": "work in progress...",
         "type": "parsed_v1",
@@ -53,14 +58,11 @@ def serialize_event(event):
         "date": event.time,
         "durationInSeconds": 0,
         "location": {
-                "country": "Armenia",
-                "city": "Yerevan",
+            "country": "Armenia",
+            "city": "Yerevan",
         },
         "image": event.img,
-        "price": {
-            "amount": event.price,
-            "currency": "AMD"
-        },
+        "price": {"amount": event.price, "currency": "AMD"},
         "timezone": {
             "timezoneName": "Asia/Yerevan",
             "timezoneOffset": "+04:00",
@@ -70,7 +72,7 @@ def serialize_event(event):
 
 
 def get_page(client: Client, url: str) -> Response:
-    """ Scrape html from page and check if next pages appears """
+    """Scrape html from page and check if next pages appears"""
     resp = client.get(url, headers=HEADERS)
     html = HTMLParser(resp.text)
 
@@ -78,21 +80,23 @@ def get_page(client: Client, url: str) -> Response:
 
 
 def get_pages_amount(client: Client, url: str) -> int:
-    """ func to get number of pages with events """
+    """func to get number of pages with events"""
     resp = client.get(url, headers=HEADERS)
     html = HTMLParser(resp.text)
 
-    pages_amount = html.css("ul[class='pagination justify-content-center'] >" +
-                            "li[class='page-item']")[-1:][0].text()
+    pages_amount = html.css(
+        "ul[class='pagination justify-content-center'] >" + "li[class='page-item']"
+    )[-1:][0].text()
 
     return int(pages_amount)
 
 
 def is_valid(data) -> bool:
-    """ Helps us to catch website's structure changes """
+    """Helps us to catch website's structure changes"""
     if data is None:
         logger.warning(
-            "Seems that website changed structure. Please recheck code and website")
+            "Seems that website changed structure. Please recheck code and website"
+        )
 
         return False
     else:
@@ -100,10 +104,11 @@ def is_valid(data) -> bool:
 
 
 def get_prices(cards):
-    """ extract prices """
+    """extract prices"""
     if len(cards) == 0:
         logger.warning(
-            "Seems that website changed structure. Please recheck code and website")
+            "Seems that website changed structure. Please recheck code and website"
+        )
         return "website structure changed"
     else:
         for card in cards:
@@ -116,19 +121,17 @@ def get_prices(cards):
 
 
 def parse_block(block) -> Event:
-    """ Parse one block from scraped data """
+    """Parse one block from scraped data"""
     # Extract and prepare "time"
-    month_day_node = block.css_first(
-        "div[class='col-12 mt-n1'] > div")
+    month_day_node = block.css_first("div[class='col-12 mt-n1'] > div")
     # Need validate data each parsing attempt
     if is_valid(month_day_node):
-        month_day = month_day_node.text().replace('\n', '').strip()
+        month_day = month_day_node.text().replace("\n", "").strip()
 
-    time_node = block.css_first(
-        "div[class='text-grey text-md mb-2']")
+    time_node = block.css_first("div[class='text-grey text-md mb-2']")
 
     if is_valid(time_node):
-        time = time_node.text().replace('\n', '').strip().split(' ')
+        time = time_node.text().replace("\n", "").strip().split(" ")
         cleaned_time = f"{month_day} {time[-1:][0]}"
     else:
         cleaned_time = None
@@ -156,13 +159,13 @@ def parse_block(block) -> Event:
         url_to_original=url,
         time=cleaned_time,
         price=price,
-        img=img
+        img=img,
     )
     return event
 
 
 def parse_detail(blocks: list) -> list:
-    """ Clean and prepare all data that we need """
+    """Clean and prepare all data that we need"""
     result = []
     # In this loop we will extract all
     #  info that we can from each event's div
@@ -174,15 +177,14 @@ def parse_detail(blocks: list) -> list:
 
 
 def scrape_blocks(html: HTMLParser) -> list:
-    """ Getting all divs with information from page """
-    blocks = html.css("div[class='row px-lg-7']" +
-                      " > div")
+    """Getting all divs with information from page"""
+    blocks = html.css("div[class='row px-lg-7']" + " > div")
 
     return blocks
 
 
 def pagination_loop(client: Client) -> list:
-    """ Loop through all pages """
+    """Loop through all pages"""
     url = "https://www.visityerevan.am/browse/things-to-do-events/ru/"
     # How many pages we will scrape
     pages_amount = get_pages_amount(client, url)
@@ -204,7 +206,7 @@ def pagination_loop(client: Client) -> list:
 
 
 async def scrape_visityerevan() -> list:
-    """ Main function which contains all logic """
+    """Main function which contains all logic"""
     # Start a new session
     client = Client()
     # Create list with all divs which contain info about events

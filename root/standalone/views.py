@@ -14,11 +14,9 @@ async def get_events() -> dict:
         "data": data,
     }
 
-@router.get('/visityerevan')
+
+@router.get("/visityerevan")
 async def get_visityerevan_events():
-    """ returns json with data from visityerevan """
+    """returns json with data from visityerevan"""
     data = await scrape_visityerevan()
-    return {
-        "status": "success",
-        "data": data
-        }
+    return {"status": "success", "data": data}
