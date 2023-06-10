@@ -1,8 +1,20 @@
 """ API """
-from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
 
-from root.routers import router
+from fastapi import FastAPI, Request
+
+from routers import api_router
+
+from fastapi.templating import Jinja2Templates
 
 app = FastAPI()
 
-app.include_router(router)
+app.include_router(api_router)
+
+
+assets = Jinja2Templates(directory="assets")
+
+
+@app.get("/", response_class=HTMLResponse)
+async def read_item(request: Request):
+    return assets.TemplateResponse("index.html", {"request": request})
