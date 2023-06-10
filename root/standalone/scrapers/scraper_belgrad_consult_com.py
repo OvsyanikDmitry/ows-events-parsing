@@ -31,9 +31,7 @@ async def get_page() -> str:
             try:
                 button.click()
             except ElementClickInterceptedException:
-                driver.execute_script(
-                    "window.scrollTo(0, document.body.scrollHeight);"
-                )
+                driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
                 await asyncio.sleep(0.1)
     except ElementNotInteractableException:
         pass
